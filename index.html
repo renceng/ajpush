@@ -1,0 +1,108 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0" />
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title></title>
+    <style>
+        html {
+            height: 100%;
+            background-color: #fff;
+        }
+
+        body {
+            background-color: #fff;
+            padding: 0;
+            margin: 0;
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: flex;
+            height: 100%;
+            -webkit-box-orient: vertical;
+            -webkit-flex-flow: column;
+            flex-flow: column;
+        }
+    </style>
+</head>
+
+<body>
+    <script src="./script/api.js" charset="utf-8"></script>
+    <script>
+        var ajpush = null;
+        var count;
+        apiready = function() {
+            fnInit();
+            initAjpush();
+        }
+
+        function fnInit() {
+          ajpush = api.require('ajpush');
+          ajpush.init(function(ret) {
+            if (ret && ret.status) {
+              console.log('success');
+            }
+          });
+          ajpush.setListener(
+          function(ret) {
+               var id = ret.id;
+               var title = ret.title;
+               var content = ret.content;
+               var extra = ret.extra;
+               alert(JSON.stringify(ret));
+              //监听声音然后播放
+              api.startPlay({
+                  path: extra.sound
+              }, function(ret, err){
+                  if( ret ){
+                       alert( JSON.stringify( ret ) );
+                  }else{
+                       alert( JSON.stringify( err ) );
+                  }
+              });
+
+          })
+        }
+
+        // 监听点击后
+        function initAjpush() {
+            api.addEventListener({
+                name: 'appintent'
+            }, function(ret, err) {
+                if (ret && ret.appParam.ajpush) {
+                  var jpush = ret.appParam.ajpush;
+                  var id = jpush.id;
+                  var title = jpush.title;
+                  var content = jpush.content;
+                  var extra = jpush.extra;
+                  alert(JSON.stringify(jpush)+""+id+""+title+""+content+""+JSON.stringify(extra));
+                }
+            })
+            api.addEventListener({
+                name: 'pause'
+            }, function(ret, err) {
+                onPause(); //监听应用进入后台，通知jpush暂停事件
+            })
+
+            api.addEventListener({
+                name: 'resume'
+            }, function(ret, err) {
+                onResume(); //监听应用恢复到前台，通知jpush恢复事件
+            })
+        }
+        //统计-app恢复
+        function onResume() {
+            ajpush.onResume();
+            console.log('JPush onResume');
+        }
+        //统计-app暂停
+        function onPause() {
+            ajpush.onPause();
+            console.log('JPush onPause');
+        }
+
+    </script>
+</body>
+
+</html>
